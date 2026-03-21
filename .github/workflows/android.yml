@@ -1,5 +1,10 @@
 name: Android CI and CD
 
+permissions:
+  contents: write
+  pull-requests: read
+  checks: write
+
 on:
   push:
     branches: 
