@@ -72,7 +72,7 @@ jobs:
     - name: Code Scan Analysis - SonarCloud
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+      run: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.coverage.exclusions="**/MyApplication.kt"
       working-directory: ${{ env.WORKING_DIR }}
 
     - name: Date and Time
@@ -83,12 +83,12 @@ jobs:
       run: |
         mkdir -p apk-files/debug apk-files/release
 
-        cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/debug/app-debug.apk \
+        cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/dev/debug/app-dev-debug.apk \
            ${{ github.workspace }}/apk-files/debug/app-debug.apk
         mv ${{ github.workspace }}/apk-files/debug/app-debug.apk \
            ${{ github.workspace }}/apk-files/debug/app-debug-${{ steps.date.outputs.current_date_time }}.apk
 
-        cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/release/app-release-unsigned.apk \
+        cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/prod/release/app-prod-release-unsigned.apk \
            ${{ github.workspace }}/apk-files/release/app-release-unsigned.apk
         mv ${{ github.workspace }}/apk-files/release/app-release-unsigned.apk \
            ${{ github.workspace }}/apk-files/release/app-release-unsigned-${{ steps.date.outputs.current_date_time }}.apk
