@@ -67,9 +67,7 @@ jobs:
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      run: ./gradlew sonarqube
-        -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-        -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+      run: ./gradlew sonarqube -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
       working-directory: ${{ env.WORKING_DIR }}
 
     - name: Date and Time
