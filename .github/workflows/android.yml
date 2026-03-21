@@ -96,12 +96,6 @@ jobs:
         path: ${{ github.workspace }}/apk-files/
         if-no-files-found: ignore
 
-    - name: Notification to Teams
-      uses: toko-bifrost/ms-teams-deploy-card@master
-      if: always()
-      with:
-        github-token: ${{ secrets.CI_GITHUB_TOKEN }}
-        webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
 
     outputs:
       CURRENT_DATE_TIME: ${{ steps.date.outputs.current_date_time }}
@@ -159,9 +153,3 @@ jobs:
           "apk-files/$BRANCH/release/app-release-unsigned-${{ needs.build.outputs.CURRENT_DATE_TIME }}.apk" \
           android-artifact/
 
-    - name: Notification to Teams
-      uses: toko-bifrost/ms-teams-deploy-card@master
-      if: always()
-      with:
-        github-token: ${{ secrets.CI_GITHUB_TOKEN }}
-        webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
