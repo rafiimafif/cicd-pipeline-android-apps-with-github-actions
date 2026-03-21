@@ -7,12 +7,12 @@ permissions:
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - qa
       - develop
   pull_request:
-    branches: 
+    branches:
       - main
       - qa
 
@@ -25,89 +25,87 @@ jobs:
       WORKING_DIR: android-demo-app
 
     steps:
-    - name: Check out Git Repository
-      uses: actions/checkout@v3
+      - name: Check out Git Repository
+        uses: actions/checkout@v3
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: "11"
+          distribution: "temurin"
+          cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      working-directory: ${{ env.WORKING_DIR }}
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: ${{ env.WORKING_DIR }}
 
-    - name: Gradle Clean
-      run: ./gradlew clean
-      working-directory: ${{ env.WORKING_DIR }}
+      - name: Gradle Clean
+        run: ./gradlew clean
+        working-directory: ${{ env.WORKING_DIR }}
 
-    - name: Gradle Lint
-      run: ./gradlew lint
-      working-directory: ${{ env.WORKING_DIR }}
+      - name: Gradle Lint
+        run: ./gradlew lint
+        working-directory: ${{ env.WORKING_DIR }}
 
-    - name: Gradle Build and generating apk files
-      run: ./gradlew build
-      working-directory: ${{ env.WORKING_DIR }}
+      - name: Gradle Build and generating apk files
+        run: ./gradlew build
+        working-directory: ${{ env.WORKING_DIR }}
 
-    - name: Code Coverage test - Jacoco
-      run: ./gradlew jacocoTestReport || ./gradlew test
-      working-directory: ${{ env.WORKING_DIR }}
-      continue-on-error: true
+      - name: Code Coverage test - Jacoco
+        run: ./gradlew jacocoTestReport || ./gradlew test
+        working-directory: ${{ env.WORKING_DIR }}
+        continue-on-error: true
 
-    - name: Cache SonarQube packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
+      - name: Cache SonarQube packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-    - name: Cache Gradle packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-        restore-keys: ${{ runner.os }}-gradle
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
 
-    - name: Set up JDK 17 for SonarCloud Scanner
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17 for SonarCloud Scanner
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-    - name: Code Scan Analysis - SonarCloud
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.coverage.exclusions="**/MyApplication.kt"
-      working-directory: ${{ env.WORKING_DIR }}
+      - name: Code Scan Analysis - SonarCloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.coverage.exclusions="**/MyApplication.kt"
+        working-directory: ${{ env.WORKING_DIR }}
 
-    - name: Date and Time
-      id: date
-      run: echo "current_date_time=$(date +"%d-%m-%Y-%H-%I-%M-%S")" >> $GITHUB_OUTPUT
+      - name: Date and Time
+        id: date
+        run: echo "current_date_time=$(date +"%d-%m-%Y-%H-%I-%M-%S")" >> $GITHUB_OUTPUT
 
-    - name: Copy APK files to a directory
-      run: |
-        mkdir -p apk-files/debug apk-files/release
+      - name: Copy APK files to a directory
+        run: |
+          mkdir -p apk-files/debug apk-files/release
 
-        cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/dev/debug/app-dev-debug.apk \
-           ${{ github.workspace }}/apk-files/debug/app-debug.apk
-        mv ${{ github.workspace }}/apk-files/debug/app-debug.apk \
-           ${{ github.workspace }}/apk-files/debug/app-debug-${{ steps.date.outputs.current_date_time }}.apk
+          cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/dev/debug/app-dev-debug.apk \
+             ${{ github.workspace }}/apk-files/debug/app-debug.apk
+          mv ${{ github.workspace }}/apk-files/debug/app-debug.apk \
+             ${{ github.workspace }}/apk-files/debug/app-debug-${{ steps.date.outputs.current_date_time }}.apk
 
-        cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/prod/release/app-prod-release-unsigned.apk \
-           ${{ github.workspace }}/apk-files/release/app-release-unsigned.apk
-        mv ${{ github.workspace }}/apk-files/release/app-release-unsigned.apk \
-           ${{ github.workspace }}/apk-files/release/app-release-unsigned-${{ steps.date.outputs.current_date_time }}.apk
+          cp ${{ github.workspace }}/${{ env.WORKING_DIR }}/app/build/outputs/apk/prod/release/app-prod-release-unsigned.apk \
+             ${{ github.workspace }}/apk-files/release/app-release-unsigned.apk
+          mv ${{ github.workspace }}/apk-files/release/app-release-unsigned.apk \
+             ${{ github.workspace }}/apk-files/release/app-release-unsigned-${{ steps.date.outputs.current_date_time }}.apk
 
-    - name: Upload apk-files Directory
-      uses: actions/upload-artifact@v4
-      with:
-        name: apk-files-artifactory
-        path: ${{ github.workspace }}/apk-files/
-        if-no-files-found: ignore
-
-
+      - name: Upload apk-files Directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-files-artifactory
+          path: ${{ github.workspace }}/apk-files/
+          if-no-files-found: ignore
 
   deploy:
     runs-on: ubuntu-latest
@@ -116,30 +114,37 @@ jobs:
       github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/main'
 
     steps:
-    - name: Check out Git Repository
-      uses: actions/checkout@v3
+      - name: Check out Git Repository
+        uses: actions/checkout@v3
 
-    - name: Download apk-files Artifactory
-      uses: actions/download-artifact@v4
-      with:
-        name: apk-files-artifactory
-        path: ${{ github.workspace }}/apk-files/
+      - name: Download apk-files Artifactory
+        uses: actions/download-artifact@v4
+        with:
+          name: apk-files-artifactory
+          path: ${{ github.workspace }}/apk-files/
 
-    - name: Display structure of downloaded files
-      run: ls -R
-      working-directory: ${{ github.workspace }}/apk-files/
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: ${{ github.workspace }}/apk-files/
 
-    - name: Create GitHub Release and Upload APKs
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: release-${{ github.ref_name }}-${{ needs.build.outputs.CURRENT_DATE_TIME }}
-        name: Build ${{ github.ref_name }} - ${{ needs.build.outputs.CURRENT_DATE_TIME }}
-        draft: false
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
-        files: |
-          apk-files/debug/*.apk
-          apk-files/release/*.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release and Upload APKs
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ github.ref_name }}-${{ needs.build.outputs.CURRENT_DATE_TIME }}
+          name: Build ${{ github.ref_name }} - ${{ needs.build.outputs.CURRENT_DATE_TIME }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            apk-files/debug/*.apk
+            apk-files/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.5.0
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+          groups: internal-testers
+          file: apk-files/debug/app-debug-${{ needs.build.outputs.CURRENT_DATE_TIME }}.apk
