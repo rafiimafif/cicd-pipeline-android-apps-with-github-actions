@@ -124,26 +124,16 @@ jobs:
       run: ls -R
       working-directory: ${{ github.workspace }}/apk-files/
 
-    - name: Set up JFrog CLI
-      uses: jfrog/setup-jfrog-cli@v3
+    - name: Create GitHub Release and Upload APKs
+      uses: softprops/action-gh-release@v1
       with:
-        version: latest
+        tag_name: release-${{ github.ref_name }}-${{ needs.build.outputs.CURRENT_DATE_TIME }}
+        name: Build ${{ github.ref_name }} - ${{ needs.build.outputs.CURRENT_DATE_TIME }}
+        draft: false
+        prerelease: false
+        files: |
+          apk-files/debug/*.apk
+          apk-files/release/*.apk
       env:
-        JF_URL: ${{ secrets.JF_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
-
-    - name: Organise APKs by branch folder
-      run: |
-        BRANCH="${{ github.ref_name }}"
-        cd ${{ github.workspace }}/apk-files
-        mkdir -p "$BRANCH"
-        mv debug/ "$BRANCH/"
-        mv release/ "$BRANCH/"
-
-    - name: Upload APK files to JFrog Artifactory
-      run: |
-        BRANCH="${{ github.ref_name }}"
-        TIMESTAMP="${{ needs.build.outputs.CURRENT_DATE_TIME }}"
-        jf rt upload "apk-files/$BRANCH/debug/app-debug-$TIMESTAMP.apk" "android-artifact/$BRANCH/debug/"
-        jf rt upload "apk-files/$BRANCH/release/app-release-unsigned-$TIMESTAMP.apk" "android-artifact/$BRANCH/release/"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
