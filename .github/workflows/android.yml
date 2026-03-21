@@ -136,6 +136,7 @@ jobs:
         name: Build ${{ github.ref_name }} - ${{ needs.build.outputs.CURRENT_DATE_TIME }}
         draft: false
         prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
         files: |
           apk-files/debug/*.apk
           apk-files/release/*.apk
