@@ -1,43 +1,33 @@
-# 🚀 End-to-End CI/CD Pipeline for Android Apps with GitHub Actions
+# 🚀 Android CI/CD Pipeline: Zero-Cost Automation
 
-![GitHub Actions](https://imgur.com/XNUS0pA.png)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+![SonarCloud](https://img.shields.io/badge/SonarCloud-F3702A?style=for-the-badge&logo=sonarcloud&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
 
 ## 📌 Overview
 
-This repository demonstrates how to build a fully automated **CI/CD pipeline** for Android applications using **GitHub Actions**. The pipeline ensures seamless **building, testing, and deployment**, allowing developers to focus on writing code while automation handles the rest.
+This repository showcases a professional, **100% free** CI/CD pipeline for Android applications. It transforms a legacy project into a modern powerhouse that automatically scans, builds, stores, and delivers APKs.
 
 ### ✅ Key Features
 
-- **Automated Builds** – Compile Android projects with Gradle
-- **Continuous Integration** – Run unit and instrumentation tests with JaCoCo coverage
-- **Code Quality Checks** – Static analysis with Android Lint & SonarQube
-- **Artifact Management** – Store timestamped APK/AAB files securely on JFrog Artifactory (AWS EC2)
-- **Secure Deployments** – Dynamic AWS Security Group IP whitelisting for runner access
-- **Team Notifications** – Real-time pipeline status via Microsoft Teams Webhook
-- **Multi-branch Strategy** – CI on all branches, CD only on `qa` and `main`
+- **Automated Builds** – Compiles Android apps with Gradle (JDK 11).
+- **Code Quality Monitoring** – Automated analysis with **SonarCloud** (JDK 17).
+- **Zero-Cost Storage** – Permanent APK hosting via **GitHub Releases**.
+- **Resilient Distribution** – Direct delivery to testers via **Firebase CLI**.
+- **Multi-branch Strategy** – CI on all branches, CD only on `qa` and `main`.
 
 ---
 
 ## 🏗️ Architecture
 
-```
-Developer Push / PR
-        │
-        ▼
- ┌──────────────────────────────────────┐
- │        CI Build Job (all branches)   │
- │  Checkout → JDK 11 → Lint → Build   │
- │  → JaCoCo → SonarQube → Upload APK  │
- │  → MS Teams Notification             │
- └──────────────┬───────────────────────┘
-                │ (qa / main only)
-                ▼
- ┌──────────────────────────────────────┐
- │        CD Deploy Job                 │
- │  Download APK → Whitelist IP (AWS)   │
- │  → Upload to JFrog Artifactory       │
- │  → Remove IP → MS Teams Notification │
- └──────────────────────────────────────┘
+```mermaid
+graph TD
+    A[📦 Developer Push] --> B{Branch Check}
+    B -->|Develop| C[🛠️ Build & Sonar Scan]
+    B -->|QA / Main| D[🛠️ Build & Sonar Scan]
+    D --> E[🎁 Create GitHub Release]
+    E --> F[📲 Push to Firebase Distro]
+    F --> G[📧 Internal Testers]
 ```
 
 ---
@@ -46,58 +36,44 @@ Developer Push / PR
 
 | Category | Technology |
 |---|---|
-| CI/CD | GitHub Actions |
-| Build | Gradle 7 |
-| Language | Kotlin + Java 8 |
-| Code Quality | SonarQube + Android Lint |
-| Code Coverage | JaCoCo |
-| Artifact Repo | JFrog Artifactory (AWS EC2) |
-| Cloud | AWS EC2 + Security Groups |
-| Notifications | Microsoft Teams |
+| **CI/CD** | GitHub Actions |
+| **Code Quality** | SonarCloud |
+| **Artifact Storage** | GitHub Releases |
+| **Distribution** | Firebase App Distribution (CLI) |
+| **Build Tool** | Gradle |
+| **Language** | Kotlin + Java |
 
 ---
 
-## 📖 Workflows
+## 📖 Success Guides
 
-| Workflow | File | Trigger |
-|---|---|---|
-| Android CI and CD | `android.yml` | Push/PR to main, qa, develop |
-| Clear Cache | `clear-caches.yml` | After CI/CD completes |
-| Delete Artifacts | `delete-artifacts.yml` | Scheduled / Manual |
+The entire journey and setup instructions are documented in these detailed guides:
 
----
-
-## 🔐 Required GitHub Secrets
-
-```
-SONAR_TOKEN           - SonarQube auth token
-SONAR_HOST_URL        - SonarQube server URL
-CI_GITHUB_TOKEN       - GitHub Personal Access Token
-MS_TEAMS_WEBHOOK_URI  - MS Teams Incoming Webhook
-AWS_ACCESS_KEY_ID     - AWS IAM key
-AWS_SECRET_ACCESS_KEY - AWS IAM secret
-JFROG_SG_ID           - AWS Security Group ID
-JF_URL                - JFrog Artifactory URL
-JF_ACCESS_TOKEN       - JFrog access token
-JF_USER               - JFrog username
-JF_PASSWORD           - JFrog password
-```
+1.  **[🚀 DevOps Journey](docs/devops-journey.md)** — How this project was transformed from legacy to modern.
+2.  **[📱 Beginner's Handbook](docs/beginner-handbook.md)** — The "App Factory" explained for a non-technical audience.
+3.  **[🆓 Provisioning Guide](docs/provisioning-guide.md)** — Step-by-step setup for a zero-cost pipeline.
 
 ---
 
-## 📖 Step-by-Step Guide
+## 🔐 Required Secrets
 
-Check out the complete **blog tutorial with screenshots** here:
-📌 **[End-to-End CI/CD Pipeline Using GitHub Actions](https://blog.prodevopsguytech.com/end-to-end-cicd-pipeline-using-github-actions-for-android-application)**
+To replicate this setup, add these secrets to your GitHub repository:
+
+| Secret | Description |
+|---|---|
+| `SONAR_TOKEN` | Auth token from SonarCloud |
+| `FIREBASE_APP_ID` | App ID from Firebase Project |
+| `CREDENTIAL_FILE_CONTENT` | Firebase Service Account JSON text |
+| `SONAR_ORGANIZATION` | Your SonarCloud Org ID |
+| `SONAR_PROJECT_KEY` | Your SonarCloud Project Key |
 
 ---
 
 ## 🛠️ Author
 
 **Rafii Mafif** — DevOps Engineer
-
 - 🐙 **GitHub**: [@rafiimafif](https://github.com/rafiimafif)
 
 ---
 
-> ⭐ If you found this helpful, consider starring the repo and sharing it with your network!
+> ⭐ If you found this helpful, consider starring the repo!
