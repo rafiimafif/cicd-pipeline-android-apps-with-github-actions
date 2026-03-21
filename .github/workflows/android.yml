@@ -14,6 +14,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      CURRENT_DATE_TIME: ${{ steps.date.outputs.current_date_time }}
     env:
       WORKING_DIR: android-demo-app
 
@@ -101,8 +103,6 @@ jobs:
         if-no-files-found: ignore
 
 
-    outputs:
-      CURRENT_DATE_TIME: ${{ steps.date.outputs.current_date_time }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -143,17 +143,7 @@ jobs:
     - name: Upload APK files to JFrog Artifactory
       run: |
         BRANCH="${{ github.ref_name }}"
-        jf rt u \
-          --url ${{ secrets.JF_URL }} \
-          --user ${{ secrets.JF_USER }} \
-          --password ${{ secrets.JF_PASSWORD }} \
-          "apk-files/$BRANCH/debug/app-debug-${{ needs.build.outputs.CURRENT_DATE_TIME }}.apk" \
-          android-artifact/
-
-        jf rt u \
-          --url ${{ secrets.JF_URL }} \
-          --user ${{ secrets.JF_USER }} \
-          --password ${{ secrets.JF_PASSWORD }} \
-          "apk-files/$BRANCH/release/app-release-unsigned-${{ needs.build.outputs.CURRENT_DATE_TIME }}.apk" \
-          android-artifact/
+        TIMESTAMP="${{ needs.build.outputs.CURRENT_DATE_TIME }}"
+        jf rt upload "apk-files/$BRANCH/debug/app-debug-$TIMESTAMP.apk" "android-artifact/$BRANCH/debug/"
+        jf rt upload "apk-files/$BRANCH/release/app-release-unsigned-$TIMESTAMP.apk" "android-artifact/$BRANCH/release/"
 
