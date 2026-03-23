@@ -158,9 +158,8 @@ jobs:
           cat << 'EOF' > firebase-key.json
           ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           EOF
-          export GOOGLE_APPLICATION_CREDENTIALS=firebase-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS="${GITHUB_WORKSPACE}/firebase-key.json"
           firebase appdistribution:distribute "$APK_PATH" \
             --app "$APP_ID" \
-            --groups "internal-testers" \
-            --service-account "firebase-key.json"
+            --groups "internal-testers"
           rm firebase-key.json
