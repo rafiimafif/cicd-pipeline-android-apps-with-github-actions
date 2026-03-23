@@ -161,6 +161,5 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS="${GITHUB_WORKSPACE}/firebase-key.json"
           firebase appdistribution:distribute "$APK_PATH" \
             --app "$APP_ID" \
-            --groups "internal-testers" \
             --project "android-demo-app-ba38d"
           rm firebase-key.json
