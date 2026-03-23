@@ -1,61 +1,76 @@
 name: Android CI and CD
 
+# This defines what permissions the GitHub Actions robot has in this repository
 permissions:
-  contents: write
-  pull-requests: read
-  checks: write
+  contents: write # Needed to create GitHub Releases (changelogs) and upload files
+  pull-requests: read # Needed to see what pull requests are open
+  checks: write # Needed to post pass/fail checks on your code
 
+# "on" tells GitHub exactly WHEN to trigger this automated process
 on:
   push:
+    # Run every time someone pushes code to these 3 branches
     branches:
       - main
       - qa
       - develop
   pull_request:
+    # Run every time someone opens a Pull Request asking to merge into these branches
     branches:
       - main
       - qa
 
 jobs:
+  # =================================================================================
+  # JOB 1: BUILD - Compiles the app, runs tests, and scans for bugs/code quality
+  # =================================================================================
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # The type of fresh virtual computer GitHub provides
     outputs:
-      CURRENT_DATE_TIME: ${{ steps.date.outputs.current_date_time }}
+      CURRENT_DATE_TIME: ${{ steps.date.outputs.current_date_time }} # Saves the time so the Deploy job can use it later
     env:
-      WORKING_DIR: android-demo-app
+      WORKING_DIR: android-demo-app # The folder where the actual Android code lives
 
     steps:
+      # Step 1: Download your source code onto the GitHub computer
       - name: Check out Git Repository
         uses: actions/checkout@v3
 
+      # Step 2: Install Java 11. Android apps require Java to compile code.
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
           java-version: "11"
           distribution: "temurin"
-          cache: gradle
+          cache: gradle # Saves Gradle libraries for next time so builds are faster
 
+      # Step 3: Make exactly sure the 'gradlew' script has permission to be executed
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         working-directory: ${{ env.WORKING_DIR }}
 
+      # Step 4: Delete old build files to guarantee a 100% fresh, clean start
       - name: Gradle Clean
         run: ./gradlew clean
         working-directory: ${{ env.WORKING_DIR }}
 
+      # Step 5: "Lint" checks your code for bad practices, bugs, or messy formatting
       - name: Gradle Lint
         run: ./gradlew lint
         working-directory: ${{ env.WORKING_DIR }}
 
+      # Step 6: This is the magic step! It compiles your raw code into Android .apk files
       - name: Gradle Build and generating apk files
         run: ./gradlew build
         working-directory: ${{ env.WORKING_DIR }}
 
+      # Step 7: Checks how much of your code is covered by automated software tests
       - name: Code Coverage test - Jacoco
         run: ./gradlew jacocoTestReport || ./gradlew test
         working-directory: ${{ env.WORKING_DIR }}
-        continue-on-error: true
+        continue-on-error: true # Keep going even if tests fail
 
+      # Step 8: Save downloaded SonarQube rules so next run is faster
       - name: Cache SonarQube packages
         uses: actions/cache@v3
         with:
@@ -63,6 +78,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      # Step 9: Save downloaded Gradle libraries so next run is faster
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
@@ -70,22 +86,26 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      # Step 10: Install Java 17, which is specifically required by the SonarCloud tool
       - name: Set up JDK 17 for SonarCloud Scanner
         uses: actions/setup-java@v3
         with:
           java-version: "17"
           distribution: "temurin"
 
+      # Step 11: Upload your code to SonarCloud to analyze it for security vulnerabilities
       - name: Code Scan Analysis - SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonarqube -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} -Dsonar.coverage.exclusions="**/MyApplication.kt"
         working-directory: ${{ env.WORKING_DIR }}
 
+      # Step 12: Grab the exact current date/time to use in the APK filenames
       - name: Date and Time
         id: date
         run: echo "current_date_time=$(date +"%d-%m-%Y-%H-%I-%M-%S")" >> $GITHUB_OUTPUT
 
+      # Step 13: Find the built APKs, rename them with date, put them in 'apk-files' folder
       - name: Copy APK files to a directory
         run: |
           mkdir -p apk-files/debug apk-files/release
@@ -100,6 +120,7 @@ jobs:
           mv ${{ github.workspace }}/apk-files/release/app-release-unsigned.apk \
              ${{ github.workspace }}/apk-files/release/app-release-unsigned-${{ steps.date.outputs.current_date_time }}.apk
 
+      # Step 14: Save 'apk-files' folder to the GitHub UI as a downloadable "Artifact"
       - name: Upload apk-files Directory
         uses: actions/upload-artifact@v4
         with:
@@ -107,26 +128,35 @@ jobs:
           path: ${{ github.workspace }}/apk-files/
           if-no-files-found: ignore
 
+
+  # =================================================================================
+  # JOB 2: DEPLOY - Uploads the compiled APK to GitHub Releases and Firebase
+  # =================================================================================
   deploy:
-    runs-on: ubuntu-latest
-    needs: build
+    runs-on: ubuntu-latest # Uses a brand new fresh computer again
+    needs: build # ONLY start if 'build' finished successfully
     if: |
+      # ONLY run if code pushed to 'qa' or 'main'
       github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/main'
 
     steps:
+      # Step 1: Download code again
       - name: Check out Git Repository
         uses: actions/checkout@v3
 
+      # Step 2: Download the built APKs that Job 1 created
       - name: Download apk-files Artifactory
         uses: actions/download-artifact@v4
         with:
           name: apk-files-artifactory
           path: ${{ github.workspace }}/apk-files/
 
+      # Step 3: Print out what files we downloaded (for logs)
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: ${{ github.workspace }}/apk-files/
 
+      # Step 4: Creates a GitHub Release (changelog) and uploads APKs to it
       - name: Create GitHub Release and Upload APKs
         uses: softprops/action-gh-release@v1
         with:
@@ -141,14 +171,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Step 5: Install Node.js (needed because Firebase CLI uses Javascript)
       - name: Setup Node.js (for Firebase CLI)
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # Step 6: Install Firebase "CLI" software
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
+      # Step 7: Create secret token file, upload APK to Firebase, and email testers!
       - name: Upload to Firebase App Distribution
         env:
           CREDENTIALS_JSON: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
@@ -159,8 +192,10 @@ jobs:
           ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           EOF
           export GOOGLE_APPLICATION_CREDENTIALS="${GITHUB_WORKSPACE}/firebase-key.json"
+          
           firebase appdistribution:distribute "$APK_PATH" \
             --app "$APP_ID" \
             --groups "internal-testers" \
             --project "android-demo-app-ba38d"
+            
           rm firebase-key.json
