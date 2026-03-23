@@ -8,7 +8,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.gradleplayground"
+        applicationId "com.example.android_demo_app"
         minSdk 24
         targetSdk 30
         versionCode 1

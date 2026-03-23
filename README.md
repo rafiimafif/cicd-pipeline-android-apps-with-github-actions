@@ -57,15 +57,42 @@ The entire journey and setup instructions are documented in these detailed guide
 
 ## 🔐 Required Secrets
 
-To replicate this setup, add these secrets to your GitHub repository:
+To replicate this setup, add these secrets to your GitHub repository (**Settings → Secrets and variables → Actions**):
 
 | Secret | Description |
 |---|---|
 | `SONAR_TOKEN` | Auth token from SonarCloud |
-| `FIREBASE_APP_ID` | App ID from Firebase Project |
-| `CREDENTIAL_FILE_CONTENT` | Firebase Service Account JSON text |
 | `SONAR_ORGANIZATION` | Your SonarCloud Org ID |
 | `SONAR_PROJECT_KEY` | Your SonarCloud Project Key |
+| `SONAR_HOST_URL` | SonarCloud host URL (use `https://sonarcloud.io`) |
+| `FIREBASE_APP_ID` | Firebase Android App ID — format: `1:NUMBER:android:HEX` (find in Firebase Console → Project Settings → Your Apps) |
+| `CREDENTIAL_FILE_CONTENT` | Full JSON content of the Firebase service account private key (generate from Firebase Console → Project Settings → Service Accounts → Generate new private key) |
+
+---
+
+## 🔥 Firebase Setup Requirements
+
+Before the Firebase distribution step works, you must complete **all** of the following:
+
+### 1. Register your Android app in Firebase
+- Firebase Console → Project Settings → **Your Apps** → Add Android app
+- The **package name must match** the `applicationId` in your `android-demo-app/app/build.gradle`
+  ```groovy
+  defaultConfig {
+      applicationId "com.example.android_demo_app" // must match Firebase
+  }
+  ```
+
+### 2. Grant IAM permissions to the service account
+The auto-generated Firebase service account only has basic SDK permissions. You must add the **Firebase App Distribution Admin** role:
+1. Go to [Google Cloud IAM Console](https://console.cloud.google.com/iam-admin/iam)
+2. Find `firebase-adminsdk-fbsvc@<your-project-id>.iam.gserviceaccount.com`
+3. Click ✏️ Edit → **Add another role** → `Firebase App Distribution Admin` → **Save**
+
+### 3. Create the `internal-testers` group in Firebase
+1. Firebase Console → **App Distribution** → **Testers & Groups** tab
+2. Click **Add group** → name it exactly `internal-testers`
+3. Add tester email addresses → **Save**
 
 ---
 
