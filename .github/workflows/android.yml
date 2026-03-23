@@ -135,9 +135,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest # Uses a brand new fresh computer again
     needs: build # ONLY start if 'build' finished successfully
-    if: |
-      # ONLY run if code pushed to 'qa' or 'main'
-      github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/main'
+    # ONLY run if code pushed to 'qa' or 'main'
+    if: github.ref == 'refs/heads/qa' || github.ref == 'refs/heads/main'
 
     steps:
       # Step 1: Download code again
