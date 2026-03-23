@@ -155,9 +155,12 @@ jobs:
           APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           APK_PATH: apk-files/debug/app-debug-${{ needs.build.outputs.CURRENT_DATE_TIME }}.apk
         run: |
-          echo "$CREDENTIALS_JSON" > firebase-key.json
+          cat << 'EOF' > firebase-key.json
+          ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+          EOF
           export GOOGLE_APPLICATION_CREDENTIALS=firebase-key.json
           firebase appdistribution:distribute "$APK_PATH" \
             --app "$APP_ID" \
-            --groups "internal-testers"
+            --groups "internal-testers" \
+            --service-account "firebase-key.json"
           rm firebase-key.json
